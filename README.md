@@ -1,5 +1,20 @@
 # farva
 
+# Development Environment
+
+Use `gvm` and `govendor`.
+
+1. `gvm pkgset create farva`
+    Use gvm to create a pkgset to isolate dependencies.
+2. `gvm pkgset use farva`
+    Use gvm to manage your gopath.
+3. `gvm linkthis github.com/bcwaldon/farva`
+    Link this repository into the pkgset created by gvm.
+4. `cd "$(echo $GOPATH | cut -f 1 -d :)/src/github.com/bcwaldon/farva"`
+    Quick hack to cd into the correct directory assuming that the `gvm pkgset
+    use` command has set the first component of your gopath to the directory
+    it should have created and that linkthis successfully created an alias.
+
 This is the start to a Kubernetes Ingress Controller.
 Start by building the code:
 
