@@ -15,6 +15,8 @@ type Config struct {
 	FarvaHealthPort int
 }
 
+const DefaultFarvaHealthPort = 7333
+
 func New(cfg Config) (*Gateway, error) {
 	kc, err := newKubernetesClient(cfg.KubeconfigFile)
 	if err != nil {
@@ -25,9 +27,9 @@ func New(cfg Config) (*Gateway, error) {
 
 	var nm NGINXManager
 	if cfg.NGINXDryRun {
-		nm = newLoggingNGINXManager(cfg.NGINXHealthPort)
+		nm = newLoggingNGINXManager(newNGINXConfig(cfg.NGINXHealthPort))
 	} else {
-		nm = newNGINXManager(cfg.NGINXHealthPort)
+		nm = newNGINXManager(newNGINXConfig(cfg.NGINXHealthPort))
 	}
 
 	gw := Gateway{

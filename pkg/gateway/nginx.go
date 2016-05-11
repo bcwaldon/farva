@@ -75,8 +75,8 @@ type NGINXManager interface {
 	Reload() error
 }
 
-func newNGINXManager(hp int) NGINXManager {
-	return &nginxManager{cfg: newNGINXConfig(hp)}
+func newNGINXManager(cfg NGINXConfig) NGINXManager {
+	return &nginxManager{cfg: cfg}
 }
 
 type nginxManager struct {
@@ -151,10 +151,10 @@ func renderConfig(cfg *NGINXConfig, sm *ServiceMap) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func newLoggingNGINXManager(hp int) NGINXManager {
+func newLoggingNGINXManager(cfg NGINXConfig) NGINXManager {
 	manager := loggingNGINXManager{
 		status: nginxStatusStopped,
-		cfg:    newNGINXConfig(hp),
+		cfg:    cfg,
 	}
 	log.Printf("created newLoggingNGINXManager: %+v", manager)
 	return &manager
