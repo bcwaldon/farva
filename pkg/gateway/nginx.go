@@ -151,18 +151,12 @@ func renderConfig(cfg *NGINXConfig, sm *ServiceMap) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func newLoggingNGINXManager(cfg NGINXConfig) NGINXManager {
-	manager := loggingNGINXManager{
-		status: nginxStatusStopped,
-		cfg:    cfg,
-	}
-	log.Printf("created newLoggingNGINXManager: %+v", manager)
-	return &manager
+func newLoggingNGINXManager() NGINXManager {
+	return &loggingNGINXManager{status: nginxStatusStopped}
 }
 
 type loggingNGINXManager struct {
 	status string
-	cfg    NGINXConfig
 }
 
 func (l *loggingNGINXManager) Status() (string, error) {

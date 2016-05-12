@@ -25,12 +25,14 @@ func New(cfg Config) (*Gateway, error) {
 
 	sm := newServiceMapper(kc)
 
+	nginxCfg := newNGINXConfig(cfg.NGINXHealthPort)
 	var nm NGINXManager
 	if cfg.NGINXDryRun {
-		nm = newLoggingNGINXManager(newNGINXConfig(cfg.NGINXHealthPort))
+		nm = newLoggingNGINXManager()
 	} else {
-		nm = newNGINXManager(newNGINXConfig(cfg.NGINXHealthPort))
+		nm = newNGINXManager(nginxCfg)
 	}
+	log.Printf("Using nginx config: %+v", nginxCfg)
 
 	gw := Gateway{
 		cfg: cfg,
