@@ -17,7 +17,9 @@ build:
         code: cp bin/linux_amd64/* "$WERCKER_OUTPUT_DIR"
 
 deploy:
-    box: nginx:1.10.0
+    box:
+      id: quay.io/jacobstr/nginx-farva:01b922f571c8
+      registry: https://quay.io
     steps:
     - internal/docker-push:
         username: $QUAY_USERNAME
