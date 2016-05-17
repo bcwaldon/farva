@@ -18,7 +18,7 @@ build:
 
 deploy:
     box:
-      id: quay.io/jacobstr/nginx-farva:01b922f571c8
+      id: quay.io/jacobstr/nginx-farva:2f854b4f7f28
       registry: https://quay.io
     steps:
     - internal/docker-push:
