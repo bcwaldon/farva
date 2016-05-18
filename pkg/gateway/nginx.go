@@ -14,12 +14,15 @@ var (
 pid {{ .NGINXConfig.PIDFile }};
 daemon on;
 
+error_log /dev/stderr;
+
 events {
     worker_connections 512;
 }
 
 http {
     server {
+        access_log /dev/stdout;
         listen {{ .NGINXConfig.HealthPort }};
         location /health {
             return 200 'Healthy!';
@@ -27,6 +30,7 @@ http {
     }
 {{ range $svc := .ServiceMap.Services }}
     server {
+        access_log /dev/stdout;
         listen {{ $svc.ListenPort }};
         location / {
             proxy_pass http://{{ $svc.Namespace }}__{{ $svc.Name }};

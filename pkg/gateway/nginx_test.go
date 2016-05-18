@@ -42,12 +42,15 @@ func TestRender(t *testing.T) {
 pid /var/run/nginx.pid;
 daemon on;
 
+error_log /dev/stderr;
+
 events {
     worker_connections 512;
 }
 
 http {
     server {
+        access_log /dev/stdout;
         listen 7332;
         location /health {
             return 200 'Healthy!';
@@ -55,6 +58,7 @@ http {
     }
 
     server {
+        access_log /dev/stdout;
         listen 30001;
         location / {
             proxy_pass http://ns1__svc1;
@@ -62,9 +66,9 @@ http {
     }
     upstream ns1__svc1 {
 
-        server 10.0.0.1;  # pod1
-        server 10.0.0.2;  # pod2
-        server 10.0.0.3;  # pod3
+        server 10.0.0.1:0;  # pod1
+        server 10.0.0.2:0;  # pod2
+        server 10.0.0.3:0;  # pod3
     }
 
 }
