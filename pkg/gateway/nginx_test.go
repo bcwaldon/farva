@@ -42,12 +42,15 @@ func TestRender(t *testing.T) {
 pid /var/run/nginx.pid;
 daemon on;
 
+error_log /dev/stderr;
+
 events {
     worker_connections 512;
 }
 
 http {
     server {
+        access_log /dev/stdout;
         listen 7332;
         location /health {
             return 200 'Healthy!';
@@ -55,6 +58,7 @@ http {
     }
 
     server {
+        access_log /dev/stdout;
         listen 30001;
         location / {
             proxy_pass http://ns1__svc1;
