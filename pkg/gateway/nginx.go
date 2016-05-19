@@ -29,10 +29,10 @@ http {
     server {
         listen {{ $svc.ListenPort }};
         location {{ or $svc.Path "/" }} {
-            proxy_pass http://{{ $svc.Namespace }}__{{ $svc.Name }};
+            proxy_pass http://{{ $svc.Namespace }}__{{ $svc.IngressName }}__{{ $svc.Name }};
         }
     }
-    upstream {{ $svc.Namespace }}__{{ $svc.Name }} {
+    upstream {{ $svc.Namespace }}__{{ $svc.IngressName}}__{{ $svc.Name }} {
 {{ range $ep := $svc.Endpoints }}
         server {{ $ep.IP }}:{{ $ep.Port }};  # {{ $ep.Name }}
 {{- end }}

@@ -19,9 +19,10 @@ func TestRender(t *testing.T) {
 		sm: ServiceMap{
 			Services: []Service{
 				Service{
-					Namespace:  "ns1",
-					Name:       "svc1",
-					ListenPort: 30001,
+					Namespace:   "ns1",
+					IngressName: "ing1",
+					Name:        "svc1",
+					ListenPort:  30001,
 					Endpoints: []Endpoint{
 						Endpoint{Name: "pod1", IP: "10.0.0.1"},
 						Endpoint{Name: "pod2", IP: "10.0.0.2"},
@@ -57,10 +58,10 @@ http {
     server {
         listen 30001;
         location / {
-            proxy_pass http://ns1__svc1;
+            proxy_pass http://ns1__ing1__svc1;
         }
     }
-    upstream ns1__svc1 {
+    upstream ns1__ing1__svc1 {
 
         server 10.0.0.1:0;  # pod1
         server 10.0.0.2:0;  # pod2

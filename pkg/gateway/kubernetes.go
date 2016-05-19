@@ -100,9 +100,10 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 			ingServicePort := ing.Spec.Backend.ServicePort.IntValue()
 
 			svc := Service{
-				Name:      ing.Spec.Backend.ServiceName,
-				Namespace: ing.ObjectMeta.Namespace,
-				Endpoints: []Endpoint{},
+				Name:        ing.Spec.Backend.ServiceName,
+				IngressName: ing.ObjectMeta.Name,
+				Namespace:   ing.ObjectMeta.Namespace,
+				Endpoints:   []Endpoint{},
 			}
 			if err := setServicePorts(&svc, ingServicePort, asm); err != nil {
 				return nil, err
@@ -120,11 +121,12 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 					ingServicePath := path.Path
 					ingServicePort := path.Backend.ServicePort.IntValue()
 					svc := Service{
-						Name:      path.Backend.ServiceName,
-						Namespace: ing.ObjectMeta.Namespace,
-						Endpoints: []Endpoint{},
-						Path:      ingServicePath,
-						Host:      ingServiceHost,
+						Name:        path.Backend.ServiceName,
+						IngressName: ing.ObjectMeta.Name,
+						Namespace:   ing.ObjectMeta.Namespace,
+						Endpoints:   []Endpoint{},
+						Path:        ingServicePath,
+						Host:        ingServiceHost,
 					}
 					if err := setServicePorts(&svc, ingServicePort, asm); err != nil {
 						return nil, err

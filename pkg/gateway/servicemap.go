@@ -9,11 +9,12 @@ type ServiceMap struct {
 }
 
 type Service struct {
-	Namespace  string
-	Name       string
-	ListenPort int
-	TargetPort int
-	Endpoints  []Endpoint
+	Namespace   string
+	Name        string
+	IngressName string
+	ListenPort  int
+	TargetPort  int
+	Endpoints   []Endpoint
 	// Optional for rule-based backends.
 	Path string
 	Host string
