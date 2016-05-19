@@ -28,7 +28,7 @@ http {
 {{ range $svc := .ServiceMap.Services }}
     server {
         listen {{ $svc.ListenPort }};
-        location / {
+        location {{ or $svc.Path "/" }} {
             proxy_pass http://{{ $svc.Namespace }}__{{ $svc.Name }};
         }
     }

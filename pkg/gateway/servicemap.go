@@ -14,6 +14,9 @@ type Service struct {
 	ListenPort int
 	TargetPort int
 	Endpoints  []Endpoint
+	// Optional for rule-based backends.
+	Path string
+	Host string
 }
 
 type Endpoint struct {
