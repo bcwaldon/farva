@@ -1,22 +1,39 @@
 package gateway
 
+import (
+	"fmt"
+)
+
 type ServiceMapper interface {
 	ServiceMap() (*ServiceMap, error)
 }
 
 type ServiceMap struct {
-	Services []Service
+	ServiceGroups []ServiceGroup
 }
 
 type Service struct {
-	Namespace   string
-	Name        string
-	IngressName string
-	TargetPort  int
-	Endpoints   []Endpoint
-	// Optional for rule-based backends.
-	Path string
-	Host string
+	Namespace  string
+	Name       string
+	TargetPort int
+	Endpoints  []Endpoint
+	Path       string
+}
+
+type ServiceGroup struct {
+	Name      string
+	Namespace string
+	Aliases   []string
+	Services  []Service
+}
+
+func (svg *ServiceGroup) DefaultServerName(suffix string) string {
+	return fmt.Sprintf(
+		"%s.%s.%s",
+		svg.Name,
+		svg.Namespace,
+		suffix,
+	)
 }
 
 type Endpoint struct {

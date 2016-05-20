@@ -93,17 +93,23 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 		return nil, err
 	}
 
-	var services []Service
+	var serviceGroups []ServiceGroup
 	for _, ing := range ingressList.Items {
+		var services []Service
+		svg := ServiceGroup{
+			Name:      ing.ObjectMeta.Name,
+			Namespace: ing.ObjectMeta.Namespace,
+			Services:  []Service{},
+		}
+
 		if ing.Spec.Backend != nil {
 			// Default backend.
 			ingServicePort := ing.Spec.Backend.ServicePort.IntValue()
 
 			svc := Service{
-				Name:        ing.Spec.Backend.ServiceName,
-				IngressName: ing.ObjectMeta.Name,
-				Namespace:   ing.ObjectMeta.Namespace,
-				Endpoints:   []Endpoint{},
+				Name:      ing.Spec.Backend.ServiceName,
+				Namespace: ing.ObjectMeta.Namespace,
+				Endpoints: []Endpoint{},
 			}
 			if err := setServicePorts(&svc, ingServicePort, asm); err != nil {
 				return nil, err
@@ -115,18 +121,17 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 		} else {
 			// Rule-based backend.
 			for _, rule := range ing.Spec.Rules {
-				ingServiceHost := rule.Host
+				// We're explictly ignoring the host here.
+				// ingServiceHost := rule.Host
 				// Only HTTP is supported currently.
 				for _, path := range rule.HTTP.Paths {
 					ingServicePath := path.Path
 					ingServicePort := path.Backend.ServicePort.IntValue()
 					svc := Service{
-						Name:        path.Backend.ServiceName,
-						IngressName: ing.ObjectMeta.Name,
-						Namespace:   ing.ObjectMeta.Namespace,
-						Endpoints:   []Endpoint{},
-						Path:        ingServicePath,
-						Host:        ingServiceHost,
+						Name:      path.Backend.ServiceName,
+						Namespace: ing.ObjectMeta.Namespace,
+						Endpoints: []Endpoint{},
+						Path:      ingServicePath,
 					}
 					if err := setServicePorts(&svc, ingServicePort, asm); err != nil {
 						return nil, err
@@ -138,8 +143,10 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 				}
 			}
 		}
+		svg.Services = services
+		serviceGroups = append(serviceGroups, svg)
 	}
 
-	sm := &ServiceMap{Services: services}
+	sm := &ServiceMap{ServiceGroups: serviceGroups}
 	return sm, nil
 }
