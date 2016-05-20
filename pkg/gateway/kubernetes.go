@@ -44,6 +44,7 @@ type apiServiceMapper struct {
 
 func setServicePorts(svc *Service, ingServicePort int, asm *apiServiceMapper) error {
 	service, err := asm.kc.Services(svc.Namespace).Get(svc.Name)
+
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,6 @@ func setServicePorts(svc *Service, ingServicePort int, asm *apiServiceMapper) er
 		if port.Port != ingServicePort || port.Protocol != kapi.ProtocolTCP {
 			continue
 		} else {
-			svc.ListenPort = port.NodePort
 			svc.TargetPort = port.TargetPort.IntValue()
 			break
 		}

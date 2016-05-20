@@ -27,7 +27,7 @@ http {
     }
 {{ range $svc := .ServiceMap.Services }}
     server {
-        listen {{ $svc.ListenPort }};
+        listen .NGINXConfig.ListenPort;
         location {{ or $svc.Path "/" }} {
             proxy_pass http://{{ $svc.Namespace }}__{{ $svc.IngressName }}__{{ $svc.Name }};
         }
@@ -47,6 +47,7 @@ http {
 		ConfigFile: "/etc/nginx/nginx.conf",
 		PIDFile:    "/var/run/nginx.pid",
 		HealthPort: 7332,
+		ListenPort: 7331,
 	}
 )
 
@@ -60,6 +61,7 @@ type NGINXConfig struct {
 	ConfigFile string
 	PIDFile    string
 	HealthPort int
+	ListenPort int
 }
 
 func newNGINXConfig(hp int) NGINXConfig {
