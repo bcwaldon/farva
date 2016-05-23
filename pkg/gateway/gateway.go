@@ -16,6 +16,8 @@ type Config struct {
 	NGINXDryRun     bool
 	NGINXHealthPort int
 	FarvaHealthPort int
+	AnnotationZone  string
+	AliasAnnotation string
 }
 
 const DefaultFarvaHealthPort = 7333
@@ -26,7 +28,11 @@ func New(cfg Config) (*Gateway, error) {
 		return nil, err
 	}
 
-	sm := newServiceMapper(kc)
+	smcfg := &ServiceMapperConfig{
+		AnnotationZone:  cfg.AnnotationZone,
+		AliasAnnotation: cfg.AliasAnnotation,
+	}
+	sm := newServiceMapper(kc, smcfg)
 
 	nginxCfg := newNGINXConfig(cfg.NGINXHealthPort, cfg.ClusterZone)
 	var nm NGINXManager

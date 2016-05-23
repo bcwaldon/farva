@@ -11,16 +11,17 @@ import (
 	"strings"
 )
 
-const AnnotationGroup = "klondike.gateway"
-const AliasAnnotation = "hostname-alias"
-
 type ServiceMapperConfig struct {
-	AnnotationGroup string
+	AnnotationZone  string
 	AliasAnnotation string
 }
 
+func (smcfg *ServiceMapperConfig) aliasKey() string {
+	return fmt.Sprintf("%s/%s", smcfg.AnnotationZone, smcfg.AliasAnnotation)
+}
+
 var DefaultServiceMapperConfig = ServiceMapperConfig{
-	AnnotationGroup: "klondike.gateway",
+	AnnotationZone:  "klondike.gateway",
 	AliasAnnotation: "hostname-alias",
 }
 
@@ -59,12 +60,13 @@ func getKubernetesClientConfig(kubeconfig string) (*krestclient.Config, error) {
 	}
 }
 
-func newServiceMapper(kc *kclient.Client) ServiceMapper {
-	return &apiServiceMapper{kc: kc}
+func newServiceMapper(kc *kclient.Client, smcfg *ServiceMapperConfig) ServiceMapper {
+	return &apiServiceMapper{kc: kc, smcfg: smcfg}
 }
 
 type apiServiceMapper struct {
-	kc *kclient.Client
+	kc    *kclient.Client
+	smcfg *ServiceMapperConfig
 }
 
 func setServicePorts(svc *Service, ingServicePort int, asm *apiServiceMapper) error {
@@ -115,7 +117,7 @@ func setServiceEndpoints(svc *Service, asm *apiServiceMapper) error {
 func (asm *apiServiceMapper) aliases(ing *kextensions.Ingress) []string {
 	anno := ing.ObjectMeta.GetAnnotations()
 	aliases := make([]string, 0)
-	aliasKey := fmt.Sprintf("%s/%s", AnnotationGroup, AliasAnnotation)
+	aliasKey := asm.smcfg.aliasKey()
 	for key, val := range anno {
 		if key == aliasKey {
 			aliases = splitCSV(val)
