@@ -17,11 +17,11 @@ func (fsm *fakeServiceMapper) ServiceMap() (*ServiceMap, error) {
 func TestRender(t *testing.T) {
 	fsm := fakeServiceMapper{
 		sm: ServiceMap{
-			AliasMap: &AliasMap{
-				"apps.example.com": "ing1.ns1",
-			},
 			ServiceGroups: []ServiceGroup{
 				ServiceGroup{
+					Aliases: []string{
+						"apps.example.com",
+					},
 					Name:      "ing1",
 					Namespace: "ns1",
 					Services: []Service{

@@ -35,7 +35,7 @@ http {
 {{ range $svg := .ServiceMap.ServiceGroups }}
     server {
         listen {{ $.NGINXConfig.ListenPort }};
-        server_name {{ $svg.DefaultServerName $.NGINXConfig.ClusterZone }} {{ range $.ServiceMap.AliasMap.FilterByIngress $svg.Name $svg.Namespace }}{{ . }}{{ end }};
+        server_name {{ $svg.DefaultServerName $.NGINXConfig.ClusterZone }} {{ range $svg.Aliases }}{{ . }}{{ end }};
 {{ range $svc := $svg.Services }}
         location {{ or $svc.Path "/" }} {
             proxy_pass http://{{ $svc.Namespace }}__{{ $svg.Name }}__{{ $svc.Name }};

@@ -10,7 +10,6 @@ type ServiceMapper interface {
 
 type ServiceMap struct {
 	ServiceGroups []ServiceGroup
-	AliasMap      *AliasMap
 }
 
 type Service struct {
@@ -22,6 +21,7 @@ type Service struct {
 }
 
 type ServiceGroup struct {
+	Aliases   []string
 	Name      string
 	Namespace string
 	Services  []Service
@@ -40,17 +40,4 @@ type Endpoint struct {
 	Name string
 	IP   string
 	Port int
-}
-
-type AliasMap map[string]string
-
-// Generates a list of aliases for a given ingress name and namespace.
-func (a *AliasMap) FilterByIngress(name string, ns string) []string {
-	results := make([]string, 0)
-	for key, value := range *a {
-		if value == fmt.Sprintf("%s.%s", name, ns) {
-			results = append(results, key)
-		}
-	}
-	return results
 }

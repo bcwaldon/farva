@@ -1,15 +1,37 @@
 package gateway
 
 import (
+	"fmt"
 	kapi "k8s.io/kubernetes/pkg/api"
+	kextensions "k8s.io/kubernetes/pkg/apis/extensions"
 	krestclient "k8s.io/kubernetes/pkg/client/restclient"
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
 	kclientcmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	kclientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
-	"log"
+	"strings"
 )
 
-const VanityConfigMapName = "farva-vanity-urls"
+const AnnotationGroup = "klondike.gateway"
+const AliasAnnotation = "hostname-alias"
+
+type ServiceMapperConfig struct {
+	AnnotationGroup string
+	AliasAnnotation string
+}
+
+var DefaultServiceMapperConfig = ServiceMapperConfig{
+	AnnotationGroup: "klondike.gateway",
+	AliasAnnotation: "hostname-alias",
+}
+
+func splitCSV(csv string) []string {
+	parts := strings.Split(csv, ",")
+	trimmed := []string{}
+	for _, part := range parts {
+		trimmed = append(trimmed, strings.TrimSpace(part))
+	}
+	return trimmed
+}
 
 func newKubernetesClient(kubeconfig string) (*kclient.Client, error) {
 	cfg, err := getKubernetesClientConfig(kubeconfig)
@@ -90,33 +112,22 @@ func setServiceEndpoints(svc *Service, asm *apiServiceMapper) error {
 	return nil
 }
 
-func (asm *apiServiceMapper) aliases() (*AliasMap, error) {
-	vanityUrls, err := asm.kc.ConfigMaps(kapi.NamespaceAll).Get(VanityConfigMapName)
-	if err != nil {
-		return nil, err
-	} else {
-		aliases := AliasMap{}
-		for key, val := range vanityUrls.Data {
-			aliases[key] = val
+func (asm *apiServiceMapper) aliases(ing *kextensions.Ingress) []string {
+	anno := ing.ObjectMeta.GetAnnotations()
+	aliases := make([]string, 0)
+	aliasKey := fmt.Sprintf("%s/%s", AnnotationGroup, AliasAnnotation)
+	for key, val := range anno {
+		if key == aliasKey {
+			aliases = splitCSV(val)
 		}
-		return &aliases, nil
 	}
+	return aliases
 }
 
 func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 	ingressList, err := asm.kc.Ingress(kapi.NamespaceAll).List(kapi.ListOptions{})
 	if err != nil {
 		return nil, err
-	}
-
-	aliases, err := asm.aliases()
-	if err != nil {
-		log.Printf(
-			"Could not load vanity urls from ConfigMap %s, %s",
-			VanityConfigMapName,
-			err,
-		)
-		aliases = &AliasMap{}
 	}
 
 	var serviceGroups []ServiceGroup
@@ -126,6 +137,7 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 			Name:      ing.ObjectMeta.Name,
 			Namespace: ing.ObjectMeta.Namespace,
 			Services:  []Service{},
+			Aliases:   asm.aliases(&ing),
 		}
 
 		if ing.Spec.Backend != nil {
@@ -173,6 +185,6 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 		serviceGroups = append(serviceGroups, svg)
 	}
 
-	sm := &ServiceMap{ServiceGroups: serviceGroups, AliasMap: aliases}
+	sm := &ServiceMap{ServiceGroups: serviceGroups}
 	return sm, nil
 }
