@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-const VanityConfigMapName = "FarvaVanityUrls"
+const VanityConfigMapName = "farva-vanity-urls"
 
 func newKubernetesClient(kubeconfig string) (*kclient.Client, error) {
 	cfg, err := getKubernetesClientConfig(kubeconfig)
