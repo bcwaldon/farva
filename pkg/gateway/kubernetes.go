@@ -6,7 +6,10 @@ import (
 	kclient "k8s.io/kubernetes/pkg/client/unversioned"
 	kclientcmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	kclientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
+	"log"
 )
+
+const VanityConfigMapName = "FarvaVanityUrls"
 
 func newKubernetesClient(kubeconfig string) (*kclient.Client, error) {
 	cfg, err := getKubernetesClientConfig(kubeconfig)
@@ -87,10 +90,30 @@ func setServiceEndpoints(svc *Service, asm *apiServiceMapper) error {
 	return nil
 }
 
+func (asm *apiServiceMapper) aliases() (*Aliases, error) {
+	vanityUrls, err := asm.kc.ConfigMaps(kapi.NamespaceAll).Get(VanityConfigMapName)
+	if err != nil {
+		return nil, err
+	} else {
+		aliases := &Aliases{Data: vanityUrls.Data}
+		return aliases, nil
+	}
+}
+
 func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 	ingressList, err := asm.kc.Ingress(kapi.NamespaceAll).List(kapi.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+
+	aliases, err := asm.aliases()
+	if err != nil {
+		log.Printf(
+			"Could not load vanity urls from ConfigMap %s, %s",
+			VanityConfigMapName,
+			err,
+		)
+		aliases = &Aliases{Data: map[string]string{}}
 	}
 
 	var serviceGroups []ServiceGroup
@@ -147,6 +170,6 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 		serviceGroups = append(serviceGroups, svg)
 	}
 
-	sm := &ServiceMap{ServiceGroups: serviceGroups}
+	sm := &ServiceMap{ServiceGroups: serviceGroups, Aliases: aliases}
 	return sm, nil
 }
