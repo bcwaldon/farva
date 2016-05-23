@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"fmt"
-	"strings"
 )
 
 type ServiceMapper interface {
@@ -11,7 +10,7 @@ type ServiceMapper interface {
 
 type ServiceMap struct {
 	ServiceGroups []ServiceGroup
-	Aliases       *Aliases
+	AliasMap      *AliasMap
 }
 
 type Service struct {
@@ -25,7 +24,6 @@ type Service struct {
 type ServiceGroup struct {
 	Name      string
 	Namespace string
-	Aliases   *Aliases
 	Services  []Service
 }
 
@@ -44,23 +42,15 @@ type Endpoint struct {
 	Port int
 }
 
-type Aliases struct {
-	Data map[string]string
-}
+type AliasMap map[string]string
 
 // Generates a list of aliases for a given ingress name and namespace.
-func (a *Aliases) Collect(name string, ns string) []string {
+func (a *AliasMap) FilterByIngress(name string, ns string) []string {
 	results := make([]string, 0)
-	for key, value := range a.Data {
+	for key, value := range *a {
 		if value == fmt.Sprintf("%s.%s", name, ns) {
 			results = append(results, key)
 		}
 	}
 	return results
-}
-
-// Generates a concatenated list of aliases for a given ingress name and namespace.
-func (a *Aliases) AliasNames(name string, ns string) string {
-	aliases := a.Collect(name, ns)
-	return strings.Join(aliases, " ")
 }

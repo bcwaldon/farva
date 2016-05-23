@@ -90,13 +90,16 @@ func setServiceEndpoints(svc *Service, asm *apiServiceMapper) error {
 	return nil
 }
 
-func (asm *apiServiceMapper) aliases() (*Aliases, error) {
+func (asm *apiServiceMapper) aliases() (*AliasMap, error) {
 	vanityUrls, err := asm.kc.ConfigMaps(kapi.NamespaceAll).Get(VanityConfigMapName)
 	if err != nil {
 		return nil, err
 	} else {
-		aliases := &Aliases{Data: vanityUrls.Data}
-		return aliases, nil
+		aliases := AliasMap{}
+		for key, val := range vanityUrls.Data {
+			aliases[key] = val
+		}
+		return &aliases, nil
 	}
 }
 
@@ -113,7 +116,7 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 			VanityConfigMapName,
 			err,
 		)
-		aliases = &Aliases{Data: map[string]string{}}
+		aliases = &AliasMap{}
 	}
 
 	var serviceGroups []ServiceGroup
@@ -170,6 +173,6 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 		serviceGroups = append(serviceGroups, svg)
 	}
 
-	sm := &ServiceMap{ServiceGroups: serviceGroups, Aliases: aliases}
+	sm := &ServiceMap{ServiceGroups: serviceGroups, AliasMap: aliases}
 	return sm, nil
 }
