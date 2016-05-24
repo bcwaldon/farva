@@ -10,14 +10,13 @@ import (
 )
 
 type Config struct {
-	RefreshInterval time.Duration
-	KubeconfigFile  string
-	ClusterZone     string
-	NGINXDryRun     bool
-	NGINXHealthPort int
-	FarvaHealthPort int
-	AnnotationZone  string
-	AliasAnnotation string
+	RefreshInterval  time.Duration
+	KubeconfigFile   string
+	ClusterZone      string
+	NGINXDryRun      bool
+	NGINXHealthPort  int
+	FarvaHealthPort  int
+	AnnotationPrefix string
 }
 
 const DefaultFarvaHealthPort = 7333
@@ -29,8 +28,7 @@ func New(cfg Config) (*Gateway, error) {
 	}
 
 	smcfg := &ServiceMapperConfig{
-		AnnotationZone:  cfg.AnnotationZone,
-		AliasAnnotation: cfg.AliasAnnotation,
+		AnnotationPrefix: cfg.AnnotationPrefix,
 	}
 	sm := newServiceMapper(kc, smcfg)
 

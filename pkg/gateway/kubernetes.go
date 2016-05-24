@@ -12,17 +12,30 @@ import (
 )
 
 type ServiceMapperConfig struct {
-	AnnotationZone  string
-	AliasAnnotation string
+	AnnotationPrefix string
 }
 
-func (smcfg *ServiceMapperConfig) aliasKey() string {
-	return fmt.Sprintf("%s/%s", smcfg.AnnotationZone, smcfg.AliasAnnotation)
+const HostnameAliasKey = "hostname-aliases"
+
+func (smcfg *ServiceMapperConfig) annotationKey(name string) string {
+	return fmt.Sprintf("%s/%s", smcfg.AnnotationPrefix, name)
+}
+
+// Gets a list of strings at a given annotation field.
+func (smcfg *ServiceMapperConfig) getAnnotationStringList(ing *kextensions.Ingress, name string) []string {
+	anno := ing.ObjectMeta.GetAnnotations()
+	result := make([]string, 0)
+	annotationKey := smcfg.annotationKey(name)
+	for key, val := range anno {
+		if key == annotationKey {
+			result = splitCSV(val)
+		}
+	}
+	return result
 }
 
 var DefaultServiceMapperConfig = ServiceMapperConfig{
-	AnnotationZone:  "klondike.gateway",
-	AliasAnnotation: "hostname-alias",
+	AnnotationPrefix: "klondike.gateway",
 }
 
 func splitCSV(csv string) []string {
@@ -114,18 +127,6 @@ func setServiceEndpoints(svc *Service, asm *apiServiceMapper) error {
 	return nil
 }
 
-func (asm *apiServiceMapper) aliases(ing *kextensions.Ingress) []string {
-	anno := ing.ObjectMeta.GetAnnotations()
-	aliases := make([]string, 0)
-	aliasKey := asm.smcfg.aliasKey()
-	for key, val := range anno {
-		if key == aliasKey {
-			aliases = splitCSV(val)
-		}
-	}
-	return aliases
-}
-
 func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 	ingressList, err := asm.kc.Ingress(kapi.NamespaceAll).List(kapi.ListOptions{})
 	if err != nil {
@@ -139,7 +140,7 @@ func (asm *apiServiceMapper) ServiceMap() (*ServiceMap, error) {
 			Name:      ing.ObjectMeta.Name,
 			Namespace: ing.ObjectMeta.Namespace,
 			Services:  []Service{},
-			Aliases:   asm.aliases(&ing),
+			Aliases:   asm.smcfg.getAnnotationStringList(&ing, HostnameAliasKey),
 		}
 
 		if ing.Spec.Backend != nil {

@@ -20,8 +20,7 @@ func main() {
 	fs.IntVar(&cfg.NGINXHealthPort, "nginx-health-port", gateway.DefaultNGINXConfig.HealthPort, "Port to listen on for nginx health checks.")
 	fs.IntVar(&cfg.FarvaHealthPort, "farva-health-port", gateway.DefaultFarvaHealthPort, "Port to listen on for farva health checks.")
 	fs.StringVar(&cfg.ClusterZone, "cluster-zone", "", "Use this DNS zone for routing of traffic to Kubernetes")
-	fs.StringVar(&cfg.AnnotationZone, "annotation-zone", kubernetes.DefaultServiceMapperConfig.AnnotationZone, "Forms the lookup key for additional gateway configuration annotations.")
-	fs.StringVar(&cfg.AliasAnnotation, "alias-annotation", kubernetes.DefaultServiceMapperConfig.AnnotationLabel, "Forms the lookup key for vanity hostnames.")
+	fs.StringVar(&cfg.AnnotationPrefix, "annotation-zone", gateway.DefaultServiceMapperConfig.AnnotationPrefix, "Forms the lookup key for additional gateway configuration annotations.")
 
 	fs.Parse(os.Args[1:])
 
