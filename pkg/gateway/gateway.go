@@ -70,7 +70,7 @@ func New(cfg Config) (*Gateway, error) {
 	} else {
 		nm = newNGINXManager(nginxCfg)
 	}
-	logger.Log.Info("Using nginx config: %+v", nginxCfg)
+	logger.Log.Infof("Using nginx config: %+v", nginxCfg)
 
 	gw := Gateway{
 		cfg: cfg,

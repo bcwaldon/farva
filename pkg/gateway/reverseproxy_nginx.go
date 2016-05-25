@@ -145,13 +145,15 @@ func (n *nginxManager) Start() error {
 	if err := n.assertConfigOK(); err != nil {
 		logger.Log.Info("Configuration is invalid, aborting start")
 		return err
-	} else {
-		logger.Log.Info("Starting nginx")
-		return n.run()
 	}
+	logger.Log.Info("Starting nginx")
+	return n.run()
 }
 
 func (n *nginxManager) Reload() error {
+	if err := n.assertConfigOK(); err != nil {
+		return err
+	}
 	logger.Log.Info("Reloading nginx")
 	return n.run("-s", "reload")
 }
