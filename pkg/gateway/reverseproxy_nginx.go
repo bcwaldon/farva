@@ -71,6 +71,7 @@ stream {
 		ClusterZone: "example.com",
 		ConfigFile:  "/etc/nginx/nginx.conf",
 		PIDFile:     "/var/run/nginx.pid",
+		HealthPort:  7332,
 	}
 )
 
