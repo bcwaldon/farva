@@ -3,6 +3,7 @@ package logpipe
 import (
 	"bufio"
 	"github.com/bcwaldon/farva/pkg/logger"
+	"io"
 	"os"
 	"syscall"
 )
@@ -34,7 +35,7 @@ func (l *LogPipe) Start() error {
 
 		for {
 			line, _, err := reader.ReadLine()
-			if err != nil {
+			if err != nil && err != io.EOF {
 				logger.Log.Errorf("Could not read line from fifo: %s", err)
 			} else {
 				logger.Log.Printf("NGINX: %s", string(line))
