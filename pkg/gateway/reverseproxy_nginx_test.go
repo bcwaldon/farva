@@ -16,11 +16,13 @@ func (fsm *fakeReverseProxyConfigGetter) ReverseProxyConfig() (*reverseProxyConf
 
 func TestRenderConfig(t *testing.T) {
 	tests := []struct {
+		ng   NGINXConfig
 		rc   reverseProxyConfig
 		want string
 	}{
 		// static code with and without message, no location
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPServers: []httpReverseProxyServer{
 					httpReverseProxyServer{
@@ -79,6 +81,7 @@ stream {
 
 		// single location, static code w/ and w/o message
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPServers: []httpReverseProxyServer{
 					httpReverseProxyServer{
@@ -155,6 +158,7 @@ stream {
 
 		// one HTTP server, multiple upstreams and paths
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPServers: []httpReverseProxyServer{
 					httpReverseProxyServer{
@@ -269,6 +273,7 @@ stream {
 
 		// two TCP servers, various upstreams
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				TCPServers: []tcpReverseProxyServer{
 					tcpReverseProxyServer{
@@ -363,6 +368,7 @@ stream {
 		},
 		// Multiple AltNames
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPServers: []httpReverseProxyServer{
 					httpReverseProxyServer{
@@ -411,6 +417,7 @@ stream {
 		},
 		// DefaultServer
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPServers: []httpReverseProxyServer{
 					httpReverseProxyServer{
@@ -458,6 +465,7 @@ stream {
 		},
 		// A Server with no upstreams.
 		{
+			ng: DefaultNGINXConfig,
 			rc: reverseProxyConfig{
 				HTTPUpstreams: []httpReverseProxyUpstream{
 					httpReverseProxyUpstream{
@@ -506,11 +514,51 @@ stream {
 }
 `,
 		},
+		{
+			ng: NGINXConfig{
+				ClusterZone: "example.com",
+				ConfigFile:  "/etc/nginx/nginx.conf",
+				PIDFile:     "/var/run/nginx.pid",
+				HealthPort:  7332,
+				AccessLog:   "",
+				ErrorLog:    "",
+			},
+			rc: reverseProxyConfig{},
+			want: `
+pid /var/run/nginx.pid;
+error_log off;
+daemon on;
+worker_processes auto;
+
+events {
+    worker_connections 512;
+}
+
+http {
+    server_names_hash_bucket_size 128;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log off;
+
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+
+
+
+}
+
+stream {
+
+
+}
+`,
+		},
 	}
 
 	for i, tt := range tests {
 		fsm := fakeReverseProxyConfigGetter{rc: tt.rc}
-		cfg := DefaultNGINXConfig
+		cfg := tt.ng
 		got, err := renderConfig(&cfg, &fsm.rc)
 		if err != nil {
 			t.Errorf("case %d: unexpected error: %v", i, err)

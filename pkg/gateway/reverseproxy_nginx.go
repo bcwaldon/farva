@@ -13,7 +13,11 @@ import (
 var (
 	nginxTemplateData = `
 pid {{ .NGINXConfig.PIDFile }};
+{{- if .NGINXConfig.ErrorLog }}
 error_log {{ .NGINXConfig.ErrorLog }};
+{{- else }}
+error_log off;
+{{- end }}
 daemon on;
 worker_processes auto;
 
@@ -26,7 +30,11 @@ http {
     log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
+    {{- if .NGINXConfig.AccessLog }}
     access_log {{ .NGINXConfig.AccessLog }} main;
+    {{- else }}
+    access_log off;
+    {{- end }}
 
     proxy_http_version 1.1;
     proxy_set_header Connection "";
