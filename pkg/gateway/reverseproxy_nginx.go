@@ -61,6 +61,20 @@ http {
     }
 {{- end }}
 {{ end }}
+	# localhost:5050/nginx_status
+	# configure kube-datadog
+	server {
+		listen {{ .NGINX.StatusPort }}
+		server_name localhost;
+
+		access_log off;
+		allow 127.0.0.1;
+		deny all;
+
+		location /nginx_status {
+			stub_status on;
+		}
+	}
 }
 
 stream {
