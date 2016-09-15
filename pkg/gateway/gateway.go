@@ -150,12 +150,14 @@ func (gw *Gateway) refresh() error {
 
 func (gw *Gateway) Run() error {
 
-	fifoLogger := logpipe.NewLogPipe(gw.cfg.FifoPath)
-	if err := fifoLogger.Start(); err != nil {
-		logger.Log.Fatalf(
-			"Could not start fifo logger, exiting since this will cause NGINX to block: %s",
-			err,
-		)
+	if gw.cfg.FifoPath != "" {
+		fifoLogger := logpipe.NewLogPipe(gw.cfg.FifoPath)
+		if err := fifoLogger.Start(); err != nil {
+			logger.Log.Fatalf(
+				"Could not start fifo logger, exiting since this will cause NGINX to block: %s",
+				err,
+			)
+		}
 	}
 
 	if err := gw.start(); err != nil {
