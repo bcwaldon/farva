@@ -11,21 +11,23 @@ import (
 )
 
 type Config struct {
-	RefreshInterval  time.Duration
-	KubeconfigFile   string
-	ClusterZone      string
-	NGINXDryRun      bool
-	NGINXHealthPort  int
-	HTTPListenPort   int
-	FarvaHealthPort  int
-	AnnotationPrefix string
-	FifoPath         string
+	RefreshInterval       time.Duration
+	KubeconfigFile        string
+	ClusterZone           string
+	NGINXDryRun           bool
+	NGINXHealthPort       int
+	HTTPPublicListenPort  int
+	HTTPPrivateListenPort int
+	FarvaHealthPort       int
+	AnnotationPrefix      string
+	FifoPath              string
 }
 
 var DefaultConfig = Config{
-	HTTPListenPort:  7331,
-	FarvaHealthPort: 7333,
-	FifoPath:        "/nginx.fifo",
+	HTTPPrivateListenPort: 7331,
+	HTTPPublicListenPort:  7330,
+	FarvaHealthPort:       7333,
+	FifoPath:              "/nginx.fifo",
 }
 
 func DefaultHTTPReverseProxyServers(cfg *Config) []httpReverseProxyServer {
@@ -41,7 +43,7 @@ func DefaultHTTPReverseProxyServers(cfg *Config) []httpReverseProxyServer {
 			},
 		},
 		httpReverseProxyServer{
-			ListenPort:    cfg.HTTPListenPort,
+			ListenPort:    cfg.HTTPPrivateListenPort,
 			DefaultServer: true,
 			StaticCode:    444,
 		},
@@ -61,9 +63,10 @@ func New(cfg Config) (*Gateway, error) {
 	}
 
 	krc := &kubernetesReverseProxyConfigGetterConfig{
-		AnnotationPrefix: cfg.AnnotationPrefix,
-		ClusterZone:      cfg.ClusterZone,
-		ListenPort:       cfg.HTTPListenPort,
+		AnnotationPrefix:  cfg.AnnotationPrefix,
+		ClusterZone:       cfg.ClusterZone,
+		PrivateListenPort: cfg.HTTPPrivateListenPort,
+		PublicListenPort:  cfg.HTTPPublicListenPort,
 	}
 	rg := newReverseProxyConfigGetter(kc, krc)
 

@@ -14,12 +14,14 @@ import (
 )
 
 type kubernetesReverseProxyConfigGetterConfig struct {
-	AnnotationPrefix string
-	ClusterZone      string
-	ListenPort       int
+	AnnotationPrefix  string
+	ClusterZone       string
+	PublicListenPort  int
+	PrivateListenPort int
 }
 
 const HostnameAliasKey = "hostname-aliases"
+const PublicHostnamesKey = "public-hostnames"
 
 func (krc *kubernetesReverseProxyConfigGetterConfig) annotationKey(name string) string {
 	return fmt.Sprintf("%s/%s", krc.AnnotationPrefix, name)
@@ -36,6 +38,18 @@ func (krc *kubernetesReverseProxyConfigGetterConfig) getAnnotationStringList(ing
 		}
 	}
 	return result
+}
+
+// Get a string at a given annotation field.
+func (krc *kubernetesReverseProxyConfigGetterConfig) getAnnotationString(ing *kextensions.Ingress, name string) string {
+	anno := ing.ObjectMeta.GetAnnotations()
+	annotationKey := krc.annotationKey(name)
+	for key, val := range anno {
+		if key == annotationKey {
+			return val
+		}
+	}
+	return ""
 }
 
 var DefaultKubernetesReverseProxyConfigGetterConfig = kubernetesReverseProxyConfigGetterConfig{
@@ -189,7 +203,7 @@ func (rcg *kubernetesReverseProxyConfigGetter) addHTTPIngressToReverseProxyConfi
 		srv := httpReverseProxyServer{
 			Name:       CanonicalHostname(ingName, ingNamespace, rcg.krc.ClusterZone),
 			AltNames:   rcg.krc.getAnnotationStringList(ing, HostnameAliasKey),
-			ListenPort: rcg.krc.ListenPort,
+			ListenPort: rcg.krc.PrivateListenPort,
 			Locations:  []httpReverseProxyLocation{},
 		}
 
@@ -238,6 +252,15 @@ func (rcg *kubernetesReverseProxyConfigGetter) addHTTPIngressToReverseProxyConfi
 		}
 
 		rp.HTTPServers = append(rp.HTTPServers, srv)
+
+		// If the service has opted to expose all hostnames publically, we copy the
+		// srv above but replace the ListenPort with our configured
+		// PublicListenPort.
+		if rcg.krc.getAnnotationString(ing, PublicHostnamesKey) == "*" {
+			publicSrv := srv
+			publicSrv.ListenPort = rcg.krc.PublicListenPort
+			rp.HTTPServers = append(rp.HTTPServers, publicSrv)
+		}
 	}
 
 	return nil
